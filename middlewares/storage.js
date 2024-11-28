@@ -2,9 +2,10 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 
- const reportStorage = multer.diskStorage({
+// Storage untuk report images
+const reportStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, './public/images');
+        cb(null, '/tmp'); // Gunakan folder sementara di Vercel
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
@@ -13,9 +14,10 @@ const crypto = require('crypto');
     }
 });
 
- const profileStorage = multer.diskStorage({
+// Storage untuk profile images
+const profileStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, './public/profile');
+        cb(null, '/tmp'); // Gunakan folder sementara di Vercel
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
@@ -24,7 +26,8 @@ const crypto = require('crypto');
     }
 });
 
- const fileFilter = function (req, file, cb) {
+// File filter
+const fileFilter = function (req, file, cb) {
     const allowedTypes = ['.png', '.jpg', '.jpeg'];
     const ext = path.extname(file.originalname);
     if (!allowedTypes.includes(ext.toLowerCase())) {
@@ -33,9 +36,10 @@ const crypto = require('crypto');
     cb(null, true);
 };
 
+// Upload configurations
 const limits = { fileSize: 5000000 };  
 
- const uploadReportImage = multer({
+const uploadReportImage = multer({
     storage: reportStorage,
     limits: limits,
     fileFilter: fileFilter,
@@ -45,6 +49,6 @@ const uploadProfileImage = multer({
     storage: profileStorage,
     limits: limits,
     fileFilter: fileFilter,
-}).single('image');;
+}).single('image');
 
 module.exports = { uploadReportImage, uploadProfileImage };
