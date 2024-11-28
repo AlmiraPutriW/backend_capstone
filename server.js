@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const connectDB = require('./config/db');
- const path = require('path');
+const path = require('path');
+const helmet = require('helmet')
+const expressMongoSanitize = require('express-mongo-sanitize')
  
 env.config();
 
@@ -14,6 +16,8 @@ const app = express();
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json()); // To accept JSON data
+app.use(helmet())
+app.use(expressMongoSanitize())
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
