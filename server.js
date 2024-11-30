@@ -7,7 +7,9 @@ const connectDB = require('./config/db');
 const path = require('path');
 const helmet = require('helmet')
 const expressMongoSanitize = require('express-mongo-sanitize')
- 
+const cloudinary = require('cloudinary').v2;
+
+
 env.config();
 
 const app = express();
