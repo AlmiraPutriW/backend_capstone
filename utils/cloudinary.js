@@ -1,35 +1,28 @@
-const multer = require('multer');
-const path = require('path');
-const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier')
 
-// Gunakan memoryStorage untuk menyimpan file di buffer
-const memoryStorage = multer.memoryStorage();
+// Fungsi utilitas untuk upload ke Cloudinary
+async function uploadToCloudinary(buffer, folder) {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { folder },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result.secure_url); // Kembalikan URL gambar
+                }
+            }
+        );
+        streamifier.createReadStream(buffer).pipe(uploadStream);
+    });
+}
 
-// File filter untuk memvalidasi tipe file
-const fileFilter = function (req, file, cb) {
-    const allowedTypes = ['.png', '.jpg', '.jpeg'];
-    const ext = file.originalname.split('.').pop().toLowerCase();
-    if (!allowedTypes.includes(`.${ext}`)) {
-        return cb(new Error('Invalid file type. Only PNG, JPG, and JPEG are allowed.'));
-    }
-    cb(null, true);
-};
+// Fungsi untuk mengambil `public_id` dari URL
+function extractPublicId(url) {
+    const parts = url.split('/');
+    const fileName = parts[parts.length - 1];
+    return fileName.split('.')[0]; // Mengambil nama file tanpa ekstensi
+}
 
-// Batas ukuran file
-const limits = { fileSize: 5000000 }; // Maksimal 5MB
-
-// Konfigurasi untuk unggah gambar laporan
-const uploadReportImage = multer({
-    storage: memoryStorage, // Simpan di memori
-    limits: limits,
-    fileFilter: fileFilter,
-}).array('gambar_pendukung', 5); // Maksimal 5 file
-
-// Konfigurasi untuk unggah gambar profil
-const uploadProfileImage = multer({
-    storage: memoryStorage, // Simpan di memori
-    limits: limits,
-    fileFilter: fileFilter,
-}).single('image'); // Hanya satu file
-
-module.exports = { uploadReportImage, uploadProfileImage };
+module.exports = { uploadToCloudinary, extractPublicId };
