@@ -3,6 +3,10 @@ const User = require('../models/userModels');
 const { generateToken } = require('../utils/tokenUtils');
 const path = require('path')
 const fs = require('fs')
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier')
+const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
+
 
 const getAllUser = async (req, res) => {
     const data = await User.find()
@@ -114,35 +118,38 @@ const Distroy = async(req, res )=> {
    
 };
 
- 
-
 const updateProfile = async (req, res) => {
     try {
         const { id } = req.params;
         const { nama, email, telp } = req.body;
 
-        // Validate required fields (without checking the image)
+        // Validasi data yang diperlukan
         if (!nama || !email || !telp) {
             return res.status(400).json({ message: 'Nama, email, dan telepon harus diisi' });
         }
 
-        // Fetch the current profile
+        // Fetch profil pengguna yang ada
         const currentProfile = await User.findById(id);
         if (!currentProfile) {
             return res.status(404).json({ message: 'Profile tidak ditemukan' });
         }
 
-        let imagePath = currentProfile.image;  
+        let imagePath = currentProfile.image; // URL gambar saat ini
 
-         if (req.file) {
-            imagePath = `/profile/${path.basename(req.file.path)}`;
-
-             if (currentProfile.image && fs.existsSync(path.join(__dirname, '..', 'public', currentProfile.image))) {
-                fs.unlinkSync(path.join(__dirname, '..', 'public', currentProfile.image));
+        // Jika ada file baru yang diunggah
+        if (req.file) {
+            // Hapus gambar lama dari Cloudinary jika ada
+            if (currentProfile.image) {
+                const publicId = extractPublicId(currentProfile.image);
+                await cloudinary.uploader.destroy(`profile/${publicId}`);
             }
+
+            // Unggah gambar baru ke Cloudinary
+            imagePath = await uploadToCloudinary(req.file.buffer, 'profile');
         }
 
-         const updatedProfile = await User.findByIdAndUpdate(
+        // Perbarui data pengguna di database
+        const updatedProfile = await User.findByIdAndUpdate(
             id,
             { nama, email, telp, image: imagePath },
             { new: true, runValidators: true }
