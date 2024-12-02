@@ -6,7 +6,7 @@ const {uploadProfileImage} = require('../middlewares/storage');
 
 
 router.get('/',  getAllUser);
-router.get('/login', Login);
+router.post('/login', Login);
 router.get('/:id',verifyToken, getUserId);
 router.post('/register', Register);
 router.post('/logout', verifyToken, Logout);
