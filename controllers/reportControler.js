@@ -39,7 +39,7 @@ const createLaporan = async (req, res) => {
     }
 
     try {
-        const { nama, judul, lokasi, kategori, description } = req.body;
+        const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
 
         // Unggah gambar ke Cloudinary
         const gambarPaths = await Promise.all(
@@ -48,6 +48,7 @@ const createLaporan = async (req, res) => {
 
         const newLaporan = new Laporan({
             nama,
+            tanggal,
             judul,
             lokasi,
             kategori,
@@ -67,7 +68,7 @@ const updateLaporan = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const { nama, judul, lokasi, kategori, description } = req.body;
+        const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
         const existingLaporan = await Laporan.findById(id);
 
         if (!existingLaporan) {
@@ -93,7 +94,7 @@ const updateLaporan = async (req, res) => {
 
         const updatedLaporan = await Laporan.findByIdAndUpdate(
             id,
-            { nama, judul, lokasi, kategori, description, gambar_pendukung: gambarPaths },
+            { nama, tanggal, judul, lokasi, kategori, description, gambar_pendukung: gambarPaths },
             { new: true, runValidators: true }
         );
 
