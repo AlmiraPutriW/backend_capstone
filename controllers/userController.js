@@ -53,7 +53,7 @@ const Login = async(req, res) => {
         secure :  process.env.NODE_ENV === 'production'
        })
 
-        res.status(200).json({ message: 'Login berhasil', data: { userId: user._id } });
+        res.status(200).json({ message: 'Login berhasil', data: { userId: user._id }, token });
    } catch (err) {
       return res.status(500).json({ error: 'Terjadi Kesalahan server' });
       
