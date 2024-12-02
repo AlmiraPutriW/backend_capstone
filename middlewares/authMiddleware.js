@@ -10,7 +10,7 @@ const verifyToken = (req, res, next) => {
     try {
         const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
         
-        req.user = decode;
+        req.user = verified;
         next();
     } catch (error) {
         res.status(401).json({ error: 'Waktu Login habis, silahkan login kembali' });
