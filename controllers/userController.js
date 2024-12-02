@@ -49,7 +49,7 @@ const Login = async(req, res) => {
        const token = generateToken(user);
 
        res.cookie('authToken', token , {
-        httpOnly : true,
+        httpOnly : false,
         secure :  process.env.NODE_ENV === 'production'
        })
 
