@@ -7,7 +7,7 @@ const laporanSchema = new Schema({
         required: true
     },
     tanggal: {
-        type: Date,
+        type: String,
     },
     judul: {
         type: String,
