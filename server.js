@@ -9,10 +9,11 @@ const helmet = require('helmet')
 const expressMongoSanitize = require('express-mongo-sanitize')
 const cloudinary = require('cloudinary').v2;
 
-
 env.config();
 
 const app = express();
+
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -20,7 +21,10 @@ cloudinary.config({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8081', // Domain frontend Anda
+  credentials: true, // Izinkan cookie lintas origin
+}));
 app.use(cookieParser());
 app.use(express.json()); // To accept JSON data
 app.use(helmet())
