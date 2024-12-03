@@ -51,6 +51,7 @@ const Login = async(req, res) => {
        res.cookie('authToken', token , {
         httpOnly : true,
         secure :  process.env.NODE_ENV === 'production',
+        sameSite : 'None',
        })
 
         res.status(200).json({ message: 'Login berhasil', data: { userId: user._id}, token, role: user.role });
