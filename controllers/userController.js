@@ -23,7 +23,7 @@ const getUserId = async (req, res) => {
     const id = req.params.id;
     const data = await User.findById(id)
     try {
-       res.status(200).json({message : 'get success', data : data})
+       res.status(200).json({message : 'get success', data : data}, data)
         
     } catch (error) {
    res.status(500).json({message : 'failure', error : error.message})
