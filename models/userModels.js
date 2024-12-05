@@ -29,7 +29,7 @@ const userSchema = new Schema(
         },
         image: {
             type: String,
-            default: '/images/default/default-profile.jpg'
+            default: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.istockphoto.com%2Fid%2Filustrasi%2Ffoto-profil&psig=AOvVaw0PcC2IOouKKr6u3ssWcRBZ&ust=1733502756845000&source=images&cd=vfe&opi=89978449&ved=0CBMQjRxqFwoTCKjSgJSHkYoDFQAAAAAdAAAAABAJ'
         },
         telp: {
             type: Number,
