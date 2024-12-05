@@ -54,7 +54,7 @@ const Login = async(req, res) => {
         sameSite : 'None',
        })
 
-        res.status(200).json({ message: 'Login berhasil', data: { userId: user._id}, token, role: user.role });
+        res.status(200).json({ message: 'Login berhasil', data: { userId: user._id}, userId: user._id, token, role: user.role });
    } catch (err) {
       return res.status(500).json({ error: 'Terjadi Kesalahan server' });
       
