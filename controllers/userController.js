@@ -50,7 +50,7 @@ const Login = async(req, res) => {
 
        res.cookie('authToken', token , {
         httpOnly : false,
-        secure :  process.env.NODE_ENV === 'production',
+        secure :  true,
         sameSite : 'None',
        })
 
