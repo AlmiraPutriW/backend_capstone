@@ -131,6 +131,49 @@ const deleteLaporan = async (req, res) => {
     }
 };
 
+// Arsipkan laporan
+const archiveLaporan = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const laporan = await Laporan.findByIdAndUpdate(
+            id,
+            { isArchived: true },
+            { new: true }
+        );
+
+        if (!laporan) {
+            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
+        }
+
+        res.status(200).json({ message: 'Laporan berhasil diarsipkan', laporan });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan saat mengarsipkan laporan', error: error.message });
+    }
+};
+
+// Batalkan arsipkan laporan
+const unarchiveLaporan = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const laporan = await Laporan.findByIdAndUpdate(
+            id,
+            { isArchived: false },
+            { new: true }
+        );
+
+        if (!laporan) {
+            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
+        }
+
+        res.status(200).json({ message: 'Laporan berhasil dibatalkan arsipnya', laporan });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan saat membatalkan arsip laporan', error: error.message });
+    }
+};
+
+
 // Approve laporan
 const accLaporan = async (req, res) => {
     const verifyRole = req.user.role;
@@ -163,4 +206,6 @@ module.exports = {
     deleteLaporan,
     updateLaporan,
     accLaporan,
+    archiveLaporan,
+    unarchiveLaporan,
 };
