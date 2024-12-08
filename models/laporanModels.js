@@ -29,8 +29,10 @@ const laporanSchema = new Schema({
         type: String,
         required: true
     },
-    gambar_pendukung: {
-        type: [String],
+    gambar_pendukung: [String],
+    isArchived: { // Menambahkan properti arsip
+        type: Boolean,
+        default: false,
     }
 });
 
