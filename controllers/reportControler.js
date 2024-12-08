@@ -8,15 +8,8 @@ const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
 
 const getLaporan = async (req, res) => {
     try {
-        const { isArchived } = req.query; // Query untuk filter arsip
-        const filter = {};
-
-        if (isArchived !== undefined) {
-            filter.isArchived = isArchived === 'true'; // Filter arsip
-        }
-
-        const laporan = await Laporan.find(filter);
-        res.status(200).json({ message: 'Laporan berhasil diambil', laporan });
+        const laporan = await Laporan.find();
+        res.status(200).json({ message: laporan });
     } catch (err) {
         res.status(500).json({ message: 'Terjadi kesalahan', error: err.message });
     }
