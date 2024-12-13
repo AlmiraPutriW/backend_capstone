@@ -8,9 +8,8 @@ const verifyToken = (req, res, next) => {
     }
 
     try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        
-        req.user = verified;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        req.userId = decoded.id;
         next();
     } catch (error) {
         res.status(401).json({ error: 'Waktu Login habis, silahkan login kembali' });
@@ -18,3 +17,4 @@ const verifyToken = (req, res, next) => {
 };
 
 module.exports = verifyToken;
+
