@@ -40,12 +40,18 @@ const createLaporan = async (req, res) => {
     try {
         const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
 
-        // Unggah gambar ke Cloudinary
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID tidak ditemukan. Silakan login ulang.' });
+        }
+
         const gambarPaths = await Promise.all(
             req.files.map(file => uploadToCloudinary(file.buffer, 'laporan'))
         );
 
         const newLaporan = new Laporan({
+            userId, 
             nama,
             tanggal,
             judul,
@@ -61,6 +67,7 @@ const createLaporan = async (req, res) => {
         res.status(500).json({ message: 'Terjadi kesalahan saat membuat laporan', error: error.message });
     }
 };
+
 
 // Perbarui laporan
 const updateLaporan = async (req, res) => {
