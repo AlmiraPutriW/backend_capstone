@@ -30,11 +30,12 @@ const laporanSchema = new Schema({
         required: true
     },
     gambar_pendukung: [String],
-    isArchived: { // Menambahkan properti arsip
+    isArchived: { 
         type: Boolean,
         default: false,
-    }
+    }, userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
+
 
  
 
