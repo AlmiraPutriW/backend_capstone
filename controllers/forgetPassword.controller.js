@@ -25,15 +25,34 @@ const forgetPassword = async (req, res) => {
        });
   
        const mailOptions = {
-        from: `"reset Password" <${process.env.EMAIL}>`,
-        to: req.body.email,
-        subject: "Reset Password",
-        text: `Please click on the following link to reset your password:. This link will expire in 10 minutes.`,
-        html: `<p>Please click on the following link to reset your password:</p>
-               <p> ${token}</p>
-               <p>This link willa expire in 10 minutes.</p>
-               <p>If you did not request a password reset, please ignore this email.</p>,
-               <a href="http://localhost:5000/reset/reset-password${token}">Klik di sini untuk update password</a>`
+        from: `"Reset Password" <${process.env.EMAIL}>`,
+to: req.body.email,
+subject: "Permintaan Reset Kata Sandi",
+html: `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <h2 style="color: #4CAF50;">Permintaan Reset Kata Sandi</h2>
+    <p>Halo,</p>
+    <p>Kami menerima permintaan untuk mengatur ulang kata sandi Anda. Jika Anda merasa tidak melakukan permintaan ini, silakan abaikan email ini.</p>
+    <p>Untuk mengatur ulang kata sandi Anda, silakan klik tombol di bawah ini:</p>
+    <div style="text-align: center; margin: 20px 0;">
+      <a href="http://localhost:8081/#/reset-password?token=${token}" 
+         style="
+            display: inline-block; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            color: #fff; 
+            background-color: #4CAF50; 
+            text-decoration: none; 
+            border-radius: 5px;
+         ">
+         Reset Kata Sandi
+      </a>
+    </div>
+    <p style="color: #555;">Link ini hanya berlaku selama <strong>10 menit</strong>.</p>
+    <p>Terima kasih,</p>
+    <p>Tim Dukungan</p>
+  </div>
+`,
       };
   
        transporter.sendMail(mailOptions, (err, info) => {
