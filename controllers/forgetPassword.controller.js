@@ -30,7 +30,7 @@ to: req.body.email,
 subject: "Permintaan Reset Kata Sandi",
 html: `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <h2 style="color: #4CAF50;">Permintaan Reset Kata Sandi</h2>
+    <h2 style="color: #4b4a91;">Permintaan Reset Kata Sandi</h2>
     <p>Halo,</p>
     <p>Kami menerima permintaan untuk mengatur ulang kata sandi Anda. Jika Anda merasa tidak melakukan permintaan ini, silakan abaikan email ini.</p>
     <p>Untuk mengatur ulang kata sandi Anda, silakan klik tombol di bawah ini:</p>
@@ -41,7 +41,7 @@ html: `
             padding: 10px 20px; 
             font-size: 16px; 
             color: #fff; 
-            background-color: #4CAF50; 
+            background-color: #4b4a91; 
             text-decoration: none; 
             border-radius: 5px;
          ">
