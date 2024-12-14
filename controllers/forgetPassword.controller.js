@@ -50,7 +50,7 @@ html: `
     </div>
     <p style="color: #555;">Link ini hanya berlaku selama <strong>10 menit</strong>.</p>
     <p>Terima kasih,</p>
-    <p>Tim Dukungan</p>
+    <p>Tim SIPRAJA</p>
   </div>
 `,
       };
