@@ -76,7 +76,7 @@ Untuk menjalankan aplikasi SIPRAJA secara lokal, ikuti langkah-langkah berikut:
    npm run dev
    ```
 
-5. Buka aplikasi di browser pada `http://localhost:8081`.
+5. Buka aplikasi di browser pada `http://localhost:5000/api/v1`.
 
 ---
 
