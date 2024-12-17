@@ -22,10 +22,9 @@ cloudinary.config({
 
 const cors = require('cors');
 
-// Middleware
 app.use(cors({
   origin: 'http://localhost:8081', 
-  credentials: true, // Izinkan cookie lintas origin
+  credentials: true,
 }));
 
 app.use(cookieParser());
