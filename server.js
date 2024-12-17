@@ -20,8 +20,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 });
 
-const cors = require('cors');
-
 app.use(cors({
   origin: 'http://localhost:8081', 
   credentials: true,
