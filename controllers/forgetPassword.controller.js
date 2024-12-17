@@ -35,7 +35,7 @@ html: `
     <p>Kami menerima permintaan untuk mengatur ulang kata sandi Anda. Jika Anda merasa tidak melakukan permintaan ini, silakan abaikan email ini.</p>
     <p>Untuk mengatur ulang kata sandi Anda, silakan klik tombol di bawah ini:</p>
     <div style="text-align: center; margin: 20px 0;">
-      <a href="http://localhost:8081/#/reset-password?token=${token}" 
+      <a href="https://sipraja-capstone.netlify.app/#/reset-password?token=${token}" 
          style="
             display: inline-block; 
             padding: 10px 20px; 
