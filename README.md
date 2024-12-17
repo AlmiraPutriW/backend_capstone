@@ -1,6 +1,4 @@
-# backend_capstone
-
-# SIPRAJA - Sistem Informasi Pelaporan Kerusakan Infrastruktur Daerah Jogja
+# Backend SIPRAJA - Sistem Informasi Pelaporan Kerusakan Infrastruktur Daerah Jogja
 
 ## 🧐 Apa itu SIPRAJA?
 
