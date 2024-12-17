@@ -22,7 +22,7 @@ cloudinary.config({
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:8081', 'https://sipraja-capstone.netlify.app', // Domain frontend Anda
+  origin: 'http://localhost:8081', 
   credentials: true, // Izinkan cookie lintas origin
 }));
 app.use(cookieParser());
