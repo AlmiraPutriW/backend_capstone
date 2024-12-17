@@ -71,17 +71,12 @@ Untuk menjalankan aplikasi SIPRAJA secara lokal, ikuti langkah-langkah berikut:
    npm install
    ```
 
-4. **Membangun Aplikasi untuk Produksi**
-   ```bash
-   npm run build
-   ```
-
-5. **Menjalankan Aplikasi dalam Mode Pengembangan**
+4. **Menjalankan Aplikasi dalam Mode Pengembangan**
    ```bash
    npm run dev
    ```
 
-6. Buka aplikasi di browser pada `http://localhost:8081`.
+5. Buka aplikasi di browser pada `http://localhost:8081`.
 
 ---
 
