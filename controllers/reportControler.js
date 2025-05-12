@@ -5,7 +5,9 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
+const Notification = require('../models/notifikasiModels');
 
+// Ambil semua laporan
 const getLaporan = async (req, res) => {
     try {
         const laporan = await Laporan.find();
@@ -31,7 +33,6 @@ const getLaporanById = async (req, res) => {
     }
 };
 
-// Buat laporan baru
 const createLaporan = async (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: 'No files uploaded' });
@@ -110,6 +111,28 @@ const updateLaporan = async (req, res) => {
     }
 };
 
+const getUserLaporan = async (req, res) => {
+    try {
+        // Ambil userId dari request (ditambahkan oleh middleware autentikasi)
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID tidak ditemukan. Silakan login ulang.' });
+        }
+
+        // Cari laporan berdasarkan userId
+        const laporan = await Laporan.find({ userId });
+
+        if (laporan.length === 0) {
+            return res.status(404).json({ message: 'Tidak ada laporan untuk pengguna ini.' });
+        }
+
+        res.status(200).json({ message: 'Laporan berhasil diambil', laporan });
+    } catch (error) {
+        res.status(500).json({ message: 'Terjadi kesalahan saat mengambil laporan', error: error.message });
+    }
+};
+
 // Hapus laporan
 const deleteLaporan = async (req, res) => {
     const { id } = req.params;
@@ -180,30 +203,107 @@ const unarchiveLaporan = async (req, res) => {
 };
 
 
-// Approve laporan
-const accLaporan = async (req, res) => {
-    const verifyRole = req.user.role;
-    if (verifyRole !== 'admin') {
-        return res.status(403).json({ message: 'Access Denied' });
-    }
+const sendEmailNotification = async (email, subject, htmlContent) => {
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD_APP_EMAIL,
+        },
+        tls: {
+            rejectUnauthorized: false,
+        }
+    });
 
+    const mailOptions = {
+        from: `"Laporan Infrastruktur" <${process.env.EMAIL}>`,
+        to: email,
+        subject: subject,
+        html: htmlContent,
+    };
+
+    return transporter.sendMail(mailOptions);
+};
+
+const accLaporan = async (req, res) => {
     try {
+        const verifyRole = req.user.role;
+        if (verifyRole !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Access Denied' });
+        }
+
         const { id } = req.params;
         const { status } = req.body;
 
-        const data = await Laporan.findById(id);
+        const validStatuses = ['belum di proses', 'di proses', 'selesai'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Status tidak valid.' });
+        }
+
+        const data = await Laporan.findById(id).populate('userId');
         if (!data) {
-            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
+            return res.status(404).json({ success: false, message: 'Laporan tidak ditemukan' });
         }
 
         data.status = status;
         const updatedLaporan = await data.save();
 
-        res.status(200).json({ message: 'Laporan berhasil diperbarui', updatedLaporan });
+        const notification = new Notification({
+            userId: data.userId._id,
+            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terimakasih telah melaporkan!`,
+        });
+        await notification.save();
+
+        // Kirim email ke pelapor
+        const subject = `Status Laporan Anda: ${data.judul}`;
+        const htmlContent = `
+            <p>Halo ${data.userId.nama || 'Pengguna'},</p>
+            <p>Laporan Anda dengan judul <strong>${data.judul}</strong> telah <strong>${status}</strong>.</p>
+            <p>Terima kasih telah menggunakan layanan pelaporan kami.</p>
+        `;
+
+        await sendEmailNotification(data.userId.email, subject, htmlContent);
+
+        res.status(200).json({
+            success: true,
+            message: 'Laporan berhasil diperbarui, notifikasi dan email dikirim.',
+            laporan: updatedLaporan
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
+        console.error('Error dalam proses accLaporan:', error.message);
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan', error: error.message });
     }
 };
+
+
+const getUserNotifications = async (req, res) => {
+    try {
+        // Ambil userId dari token autentikasi
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID tidak ditemukan. Silakan login ulang.' });
+        }
+
+        // Ambil notifikasi untuk pengguna tertentu dan urutkan berdasarkan waktu pembuatan
+        const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+
+        if (!notifications || notifications.length === 0) {
+            return res.status(404).json({ success: false, message: 'Tidak ada notifikasi untuk pengguna ini.' });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Notifikasi berhasil diambil.',
+            notifications,
+        });
+    } catch (error) {
+        console.error('Error mendapatkan notifikasi:', error.message);
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan saat mengambil notifikasi.', error: error.message });
+    }
+};
+
+
 
 module.exports = {
     getLaporan,
@@ -214,4 +314,6 @@ module.exports = {
     accLaporan,
     archiveLaporan,
     unarchiveLaporan,
+    getUserLaporan,
+    getUserNotifications,
 };
