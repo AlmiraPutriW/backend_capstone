@@ -5,7 +5,7 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
-const nodemailer = require("nodemailer");
+
 // Ambil semua laporan
 const getLaporan = async (req, res) => {
     try {
@@ -202,30 +202,9 @@ const unarchiveLaporan = async (req, res) => {
 };
 
 
-const sendEmailNotification = async (email, subject, htmlContent) => {
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD_APP_EMAIL,
-        },
-        tls: {
-            rejectUnauthorized: false,
-        }
-    });
-
-    const mailOptions = {
-        from: `"Laporan Infrastruktur" <${process.env.EMAIL}>`,
-        to: email,
-        subject: subject,
-        html: htmlContent,
-    };
-
-    return transporter.sendMail(mailOptions);
-};
-
 const accLaporan = async (req, res) => {
     try {
+        // Validasi role pengguna
         const verifyRole = req.user.role;
         if (verifyRole !== 'admin') {
             return res.status(403).json({ success: false, message: 'Access Denied' });
@@ -234,55 +213,41 @@ const accLaporan = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
+        // Validasi status
         const validStatuses = ['belum di proses', 'di proses', 'selesai'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Status tidak valid.' });
         }
 
+        // Temukan laporan berdasarkan ID
         const data = await Laporan.findById(id).populate('userId');
         if (!data) {
             return res.status(404).json({ success: false, message: 'Laporan tidak ditemukan' });
         }
 
+        // Perbarui status laporan
         data.status = status;
         const updatedLaporan = await data.save();
 
+        // Buat notifikasi untuk pengguna
         const notification = new Notification({
             userId: data.userId._id,
-            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terima kasih telah melaporkan!`,
+            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terimakasih telah melaporkan!`,
         });
         await notification.save();
 
-        res.status(200).json({
-            success: true,
-            message: 'Laporan berhasil diperbarui.',
-            laporan: updatedLaporan
+        // Kirimkan respons sukses
+        res.status(200).json({ 
+            success: true, 
+            message: 'Laporan berhasil diperbarui dan notifikasi dibuat.', 
+            laporan: updatedLaporan 
         });
-
-        // Kirim email setelah response
-        if (data.userId.email) {
-            const subject = `Status Laporan Anda: ${data.judul}`;
-            const htmlContent = `
-                <p>Halo ${data.userId.nama || 'Pengguna'},</p>
-                <p>Laporan Anda dengan judul <strong>${data.judul}</strong> telah <strong>${status}</strong>.</p>
-                <p>Terima kasih telah menggunakan layanan pelaporan kami.</p>
-            `;
-
-            sendEmailNotification(data.userId.email, subject, htmlContent)
-                .then(() => {
-                    console.log('Email berhasil dikirim ke', data.userId.email);
-                })
-                .catch((emailErr) => {
-                    console.error('Gagal mengirim email:', emailErr.message);
-                });
-        } else {
-            console.warn('Email user tidak ditemukan, email tidak dikirim.');
-        }
     } catch (error) {
-        console.error('Error dalam proses accLaporan:', error);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.', error: error.message });
+        console.error('Error dalam proses accLaporan:', error.message);
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan', error: error.message });
     }
 };
+
 
 
 module.exports = {
