@@ -5,7 +5,6 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
-const Notification = require('../models/notifikasiModels');
 
 // Ambil semua laporan
 const getLaporan = async (req, res) => {
@@ -249,33 +248,6 @@ const accLaporan = async (req, res) => {
     }
 };
 
-const getUserNotifications = async (req, res) => {
-    try {
-        // Ambil userId dari token autentikasi
-        const userId = req.userId;
-
-        if (!userId) {
-            return res.status(400).json({ success: false, message: 'User ID tidak ditemukan. Silakan login ulang.' });
-        }
-
-        // Ambil notifikasi untuk pengguna tertentu dan urutkan berdasarkan waktu pembuatan
-        const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
-
-        if (!notifications || notifications.length === 0) {
-            return res.status(404).json({ success: false, message: 'Tidak ada notifikasi untuk pengguna ini.' });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Notifikasi berhasil diambil.',
-            notifications,
-        });
-    } catch (error) {
-        console.error('Error mendapatkan notifikasi:', error.message);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan saat mengambil notifikasi.', error: error.message });
-    }
-};
-
 
 
 module.exports = {
@@ -288,5 +260,4 @@ module.exports = {
     archiveLaporan,
     unarchiveLaporan,
     getUserLaporan,
-    getUserNotifications,
 };
