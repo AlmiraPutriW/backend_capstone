@@ -23,7 +23,8 @@ cloudinary.config({
 // Daftar origin yang diizinkan
 const allowedOrigins = [
   'http://localhost:8081',
-  'https://sipraja-capstone.netlify.app'
+  'https://sipraja-capstone.netlify.app',
+    'https://siprasa.netlify.app'
 ];
 
 app.use(cors({
