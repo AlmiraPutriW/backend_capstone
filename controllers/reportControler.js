@@ -6,7 +6,6 @@ const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
 
-// Ambil semua laporan
 const getLaporan = async (req, res) => {
     try {
         const laporan = await Laporan.find();
@@ -32,6 +31,7 @@ const getLaporanById = async (req, res) => {
     }
 };
 
+// Buat laporan baru
 const createLaporan = async (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: 'No files uploaded' });
@@ -110,28 +110,6 @@ const updateLaporan = async (req, res) => {
     }
 };
 
-const getUserLaporan = async (req, res) => {
-    try {
-        // Ambil userId dari request (ditambahkan oleh middleware autentikasi)
-        const userId = req.userId;
-
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID tidak ditemukan. Silakan login ulang.' });
-        }
-
-        // Cari laporan berdasarkan userId
-        const laporan = await Laporan.find({ userId });
-
-        if (laporan.length === 0) {
-            return res.status(404).json({ message: 'Tidak ada laporan untuk pengguna ini.' });
-        }
-
-        res.status(200).json({ message: 'Laporan berhasil diambil', laporan });
-    } catch (error) {
-        res.status(500).json({ message: 'Terjadi kesalahan saat mengambil laporan', error: error.message });
-    }
-};
-
 // Hapus laporan
 const deleteLaporan = async (req, res) => {
     const { id } = req.params;
@@ -202,53 +180,30 @@ const unarchiveLaporan = async (req, res) => {
 };
 
 
+// Approve laporan
 const accLaporan = async (req, res) => {
-    try {
-        // Validasi role pengguna
-        const verifyRole = req.user.role;
-        if (verifyRole !== 'admin') {
-            return res.status(403).json({ success: false, message: 'Access Denied' });
-        }
+    const verifyRole = req.user.role;
+    if (verifyRole !== 'admin') {
+        return res.status(403).json({ message: 'Access Denied' });
+    }
 
+    try {
         const { id } = req.params;
         const { status } = req.body;
 
-        // Validasi status
-        const validStatuses = ['belum di proses', 'di proses', 'selesai'];
-        if (!validStatuses.includes(status)) {
-            return res.status(400).json({ success: false, message: 'Status tidak valid.' });
-        }
-
-        // Temukan laporan berdasarkan ID
-        const data = await Laporan.findById(id).populate('userId');
+        const data = await Laporan.findById(id);
         if (!data) {
-            return res.status(404).json({ success: false, message: 'Laporan tidak ditemukan' });
+            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
-        // Perbarui status laporan
         data.status = status;
         const updatedLaporan = await data.save();
 
-        // Buat notifikasi untuk pengguna
-        const notification = new Notification({
-            userId: data.userId._id,
-            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terimakasih telah melaporkan!`,
-        });
-        await notification.save();
-
-        // Kirimkan respons sukses
-        res.status(200).json({ 
-            success: true, 
-            message: 'Laporan berhasil diperbarui dan notifikasi dibuat.', 
-            laporan: updatedLaporan 
-        });
+        res.status(200).json({ message: 'Laporan berhasil diperbarui', updatedLaporan });
     } catch (error) {
-        console.error('Error dalam proses accLaporan:', error.message);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan', error: error.message });
+        res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
     }
 };
-
-
 
 module.exports = {
     getLaporan,
@@ -259,5 +214,4 @@ module.exports = {
     accLaporan,
     archiveLaporan,
     unarchiveLaporan,
-    getUserLaporan,
 };
