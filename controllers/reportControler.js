@@ -5,7 +5,7 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
-
+const nodemailer = require("nodemailer");
 // Ambil semua laporan
 const getLaporan = async (req, res) => {
     try {
