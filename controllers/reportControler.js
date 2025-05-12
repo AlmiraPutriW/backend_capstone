@@ -5,7 +5,6 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
-const nodemailer = require("nodemailer");
 
 const getLaporan = async (req, res) => {
     try {
@@ -197,44 +196,14 @@ const accLaporan = async (req, res) => {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
-        // Update status laporan
         data.status = status;
         const updatedLaporan = await data.save();
 
-        // Ambil data user untuk mendapatkan email
-        const user = await User.findById(data.userId);
-        if (user && user.email) {
-            // Buat transporter untuk mengirim email
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL,
-                    pass: process.env.PASSWORD_APP_EMAIL
-                }
-            });
-
-            // Konten email
-            const mailOptions = {
-                from: `"Lapor Jogja" <${process.env.EMAIL_USER}>`,
-                to: user.email,
-                subject: 'Status Laporan Anda',
-                html: `
-                    <h3>Halo, ${user.nama || 'Pengguna'}</h3>
-                    <p>Laporan Anda dengan judul <strong>"${data.judul}"</strong> telah diperbarui statusnya menjadi <strong>${status}</strong>.</p>
-                    <p>Terima kasih telah menggunakan layanan kami.</p>
-                `
-            };
-
-            // Kirim email
-            await transporter.sendMail(mailOptions);
-        }
-
-        res.status(200).json({ message: 'Laporan berhasil diperbarui dan email notifikasi telah dikirim', updatedLaporan });
+        res.status(200).json({ message: 'Laporan berhasil diperbarui', updatedLaporan });
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
     }
 };
-
 
 module.exports = {
     getLaporan,
