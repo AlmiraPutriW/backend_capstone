@@ -249,30 +249,41 @@ const accLaporan = async (req, res) => {
 
         const notification = new Notification({
             userId: data.userId._id,
-            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terimakasih telah melaporkan!`,
+            message: `Laporan Anda dengan judul ${data.judul} telah ${status}. Terima kasih telah melaporkan!`,
         });
         await notification.save();
 
-        // Kirim email ke pelapor
-        const subject = `Status Laporan Anda: ${data.judul}`;
-        const htmlContent = `
-            <p>Halo ${data.userId.nama || 'Pengguna'},</p>
-            <p>Laporan Anda dengan judul <strong>${data.judul}</strong> telah <strong>${status}</strong>.</p>
-            <p>Terima kasih telah menggunakan layanan pelaporan kami.</p>
-        `;
-
-        await sendEmailNotification(data.userId.email, subject, htmlContent);
-
         res.status(200).json({
             success: true,
-            message: 'Laporan berhasil diperbarui, notifikasi dan email dikirim.',
+            message: 'Laporan berhasil diperbarui.',
             laporan: updatedLaporan
         });
+
+        // Kirim email setelah response
+        if (data.userId.email) {
+            const subject = `Status Laporan Anda: ${data.judul}`;
+            const htmlContent = `
+                <p>Halo ${data.userId.nama || 'Pengguna'},</p>
+                <p>Laporan Anda dengan judul <strong>${data.judul}</strong> telah <strong>${status}</strong>.</p>
+                <p>Terima kasih telah menggunakan layanan pelaporan kami.</p>
+            `;
+
+            sendEmailNotification(data.userId.email, subject, htmlContent)
+                .then(() => {
+                    console.log('Email berhasil dikirim ke', data.userId.email);
+                })
+                .catch((emailErr) => {
+                    console.error('Gagal mengirim email:', emailErr.message);
+                });
+        } else {
+            console.warn('Email user tidak ditemukan, email tidak dikirim.');
+        }
     } catch (error) {
-        console.error('Error dalam proses accLaporan:', error.message);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan', error: error.message });
+        console.error('Error dalam proses accLaporan:', error);
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.', error: error.message });
     }
 };
+
 
 module.exports = {
     getLaporan,
