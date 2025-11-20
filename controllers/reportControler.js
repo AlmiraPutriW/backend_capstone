@@ -69,14 +69,17 @@ const createLaporan = async (req, res) => {
 };
 
 
-// Perbarui laporan
 const updateLaporan = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // Log untuk cek apakah file terkirim
+        console.log("UPDATE BODY:", req.body);
+        console.log("UPDATE FILES:", req.files);
+
         const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
 
-        // Ambil data laporan lama
+        // Ambil data lama
         const existingLaporan = await Laporan.findById(id);
         if (!existingLaporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
@@ -84,10 +87,12 @@ const updateLaporan = async (req, res) => {
 
         let gambarPaths = existingLaporan.gambar_pendukung;
 
-        // Jika pengguna upload gambar baru
+        // Jika ada file baru, hapus lama dan upload baru
         if (req.files && req.files.length > 0) {
 
-            // ---- HAPUS GAMBAR LAMA DI CLOUDINARY ----
+            console.log("ADA FILE BARU, MENGGANTI GAMBAR...");
+
+            // Hapus gambar lama di Cloudinary
             await Promise.all(
                 existingLaporan.gambar_pendukung.map(async (url) => {
                     const publicId = extractPublicId(url); 
@@ -97,13 +102,15 @@ const updateLaporan = async (req, res) => {
                 })
             );
 
-            // ---- UPLOAD GAMBAR BARU ----
+            // Upload gambar baru
             gambarPaths = await Promise.all(
                 req.files.map(file => uploadToCloudinary(file.buffer, 'laporan'))
             );
+        } else {
+            console.log("TIDAK ADA FILE BARU, GAMBAR TETAP.");
         }
 
-        // Simpan pembaruan
+        // Update database
         const updatedLaporan = await Laporan.findByIdAndUpdate(
             id,
             {
@@ -124,6 +131,7 @@ const updateLaporan = async (req, res) => {
         });
 
     } catch (error) {
+        console.log("UPDATE ERROR:", error);
         res.status(500).json({
             message: 'Terjadi kesalahan saat memperbarui laporan',
             error: error.message
