@@ -5,7 +5,9 @@ const verifyRole = require('../middlewares/verifyRole');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier')
 const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
-
+// =====================================
+// GET SEMUA LAPORAN
+// =====================================
 const getLaporan = async (req, res) => {
     try {
         const laporan = await Laporan.find();
@@ -15,11 +17,12 @@ const getLaporan = async (req, res) => {
     }
 };
 
-// Ambil laporan berdasarkan ID
+// =====================================
+// GET LAPORAN BY ID
+// =====================================
 const getLaporanById = async (req, res) => {
     try {
-        const { id } = req.params;
-        const laporan = await Laporan.findById(id);
+        const laporan = await Laporan.findById(req.params.id);
 
         if (!laporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
@@ -31,175 +34,176 @@ const getLaporanById = async (req, res) => {
     }
 };
 
-// Buat laporan baru
+// =====================================
+// CREATE LAPORAN (UPLOAD CLOUDINARY)
+// =====================================
 const createLaporan = async (req, res) => {
     if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: 'No files uploaded' });
+        return res.status(400).json({ message: 'Tidak ada file yang diunggah' });
     }
 
     try {
         const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
 
         const userId = req.userId;
+        if (!userId) return res.status(400).json({ message: 'User ID tidak ditemukan' });
 
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID tidak ditemukan. Silakan login ulang.' });
-        }
-
+        // Upload semua gambar ke Cloudinary
         const gambarPaths = await Promise.all(
             req.files.map(file => uploadToCloudinary(file.buffer, 'laporan'))
         );
 
         const newLaporan = new Laporan({
-            userId, 
+            userId,
             nama,
             tanggal,
             judul,
             lokasi,
             kategori,
             description,
-            gambar_pendukung: gambarPaths,
+            gambar_pendukung: gambarPaths
         });
 
         await newLaporan.save();
-        res.status(201).json({ message: 'Laporan berhasil dibuat', laporan: newLaporan });
+
+        res.status(201).json({
+            message: 'Laporan berhasil dibuat',
+            laporan: newLaporan
+        });
+
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan saat membuat laporan', error: error.message });
     }
 };
 
-
-// Perbarui laporan
+// =====================================
+// UPDATE LAPORAN
+// =====================================
 const updateLaporan = async (req, res) => {
-    const { id } = req.params;
-
     try {
-        const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
-        const existingLaporan = await Laporan.findById(id);
-
-        if (!existingLaporan) {
+        const laporan = await Laporan.findById(req.params.id);
+        if (!laporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
-        let gambarPaths = existingLaporan.gambar_pendukung;
+        const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
 
+        let gambarPaths = laporan.gambar_pendukung;
+
+        // Jika ada gambar baru → hapus yang lama, upload baru
         if (req.files && req.files.length > 0) {
+
             // Hapus gambar lama dari Cloudinary
             await Promise.all(
-                existingLaporan.gambar_pendukung.map(async url => {
+                laporan.gambar_pendukung.map(async (url) => {
                     const publicId = extractPublicId(url);
-                    await cloudinary.uploader.destroy(`laporan/${publicId}`);
+                    await cloudinary.uploader.destroy(publicId);
                 })
             );
 
-            // Unggah gambar baru ke Cloudinary
+            // Upload gambar baru
             gambarPaths = await Promise.all(
                 req.files.map(file => uploadToCloudinary(file.buffer, 'laporan'))
             );
         }
 
-        const updatedLaporan = await Laporan.findByIdAndUpdate(
-            id,
+        const updated = await Laporan.findByIdAndUpdate(
+            req.params.id,
             { nama, tanggal, judul, lokasi, kategori, description, gambar_pendukung: gambarPaths },
             { new: true, runValidators: true }
         );
 
-        res.status(200).json({ message: 'Laporan berhasil diperbarui', laporan: updatedLaporan });
+        res.status(200).json({ message: 'Laporan berhasil diperbarui', laporan: updated });
+
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan saat memperbarui laporan', error: error.message });
     }
 };
 
-// Hapus laporan
+// =====================================
+// DELETE LAPORAN
+// =====================================
 const deleteLaporan = async (req, res) => {
-    const { id } = req.params;
-
     try {
-        const laporan = await Laporan.findById(id);
+        const laporan = await Laporan.findById(req.params.id);
         if (!laporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
-        // Hapus gambar dari Cloudinary
+        // Hapus semua gambar Cloudinary
         await Promise.all(
-            laporan.gambar_pendukung.map(async url => {
+            laporan.gambar_pendukung.map(async (url) => {
                 const publicId = extractPublicId(url);
-                await cloudinary.uploader.destroy(`laporan/${publicId}`);
+                await cloudinary.uploader.destroy(publicId);
             })
         );
 
-        // Hapus laporan dari database
-        await Laporan.findByIdAndDelete(id);
+        await Laporan.findByIdAndDelete(req.params.id);
 
-        res.status(200).json({ message: 'Laporan dan gambar terkait berhasil dihapus' });
+        res.status(200).json({ message: 'Laporan dan seluruh gambar berhasil dihapus' });
+
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan saat menghapus laporan', error: error.message });
     }
 };
 
-// Arsipkan laporan
+// =====================================
+// ARSIPKAN
+// =====================================
 const archiveLaporan = async (req, res) => {
     try {
-        const { id } = req.params;
-
         const laporan = await Laporan.findByIdAndUpdate(
-            id,
+            req.params.id,
             { isArchived: true },
             { new: true }
         );
-
-        if (!laporan) {
-            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
-        }
+        if (!laporan) return res.status(404).json({ message: 'Laporan tidak ditemukan' });
 
         res.status(200).json({ message: 'Laporan berhasil diarsipkan', laporan });
+
     } catch (error) {
-        res.status(500).json({ message: 'Terjadi kesalahan saat mengarsipkan laporan', error: error.message });
+        res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
     }
 };
 
-// Batalkan arsipkan laporan
+// =====================================
+// UNARCHIVE
+// =====================================
 const unarchiveLaporan = async (req, res) => {
     try {
-        const { id } = req.params;
-
         const laporan = await Laporan.findByIdAndUpdate(
-            id,
+            req.params.id,
             { isArchived: false },
             { new: true }
         );
-
-        if (!laporan) {
-            return res.status(404).json({ message: 'Laporan tidak ditemukan' });
-        }
+        if (!laporan) return res.status(404).json({ message: 'Laporan tidak ditemukan' });
 
         res.status(200).json({ message: 'Laporan berhasil dibatalkan arsipnya', laporan });
+
     } catch (error) {
-        res.status(500).json({ message: 'Terjadi kesalahan saat membatalkan arsip laporan', error: error.message });
+        res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
     }
 };
 
-
-// Approve laporan
+// =====================================
+// ACC LAPORAN
+// =====================================
 const accLaporan = async (req, res) => {
-    const verifyRole = req.user.role;
-    if (verifyRole !== 'admin') {
+    if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Access Denied' });
     }
 
     try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        const data = await Laporan.findById(id);
-        if (!data) {
+        const laporan = await Laporan.findById(req.params.id);
+        if (!laporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
-        data.status = status;
-        const updatedLaporan = await data.save();
+        laporan.status = req.body.status;
+        const updated = await laporan.save();
 
-        res.status(200).json({ message: 'Laporan berhasil diperbarui', updatedLaporan });
+        res.status(200).json({ message: 'Laporan berhasil diperbarui', updated });
+
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan', error: error.message });
     }
@@ -209,9 +213,9 @@ module.exports = {
     getLaporan,
     getLaporanById,
     createLaporan,
-    deleteLaporan,
     updateLaporan,
+    deleteLaporan,
     accLaporan,
     archiveLaporan,
-    unarchiveLaporan,
+    unarchiveLaporan
 };
