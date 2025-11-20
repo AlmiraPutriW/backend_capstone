@@ -75,38 +75,59 @@ const updateLaporan = async (req, res) => {
 
     try {
         const { nama, tanggal, judul, lokasi, kategori, description } = req.body;
-        const existingLaporan = await Laporan.findById(id);
 
+        // Ambil data laporan lama
+        const existingLaporan = await Laporan.findById(id);
         if (!existingLaporan) {
             return res.status(404).json({ message: 'Laporan tidak ditemukan' });
         }
 
         let gambarPaths = existingLaporan.gambar_pendukung;
 
+        // Jika pengguna upload gambar baru
         if (req.files && req.files.length > 0) {
-            // Hapus gambar lama dari Cloudinary
+
+            // ---- HAPUS GAMBAR LAMA DI CLOUDINARY ----
             await Promise.all(
-                existingLaporan.gambar_pendukung.map(async url => {
-                    const publicId = extractPublicId(url);
-                    await cloudinary.uploader.destroy(`laporan/${publicId}`);
+                existingLaporan.gambar_pendukung.map(async (url) => {
+                    const publicId = extractPublicId(url); 
+                    if (publicId) {
+                        await cloudinary.uploader.destroy(publicId);
+                    }
                 })
             );
 
-            // Unggah gambar baru ke Cloudinary
+            // ---- UPLOAD GAMBAR BARU ----
             gambarPaths = await Promise.all(
                 req.files.map(file => uploadToCloudinary(file.buffer, 'laporan'))
             );
         }
 
+        // Simpan pembaruan
         const updatedLaporan = await Laporan.findByIdAndUpdate(
             id,
-            { nama, tanggal, judul, lokasi, kategori, description, gambar_pendukung: gambarPaths },
+            {
+                nama,
+                tanggal,
+                judul,
+                lokasi,
+                kategori,
+                description,
+                gambar_pendukung: gambarPaths,
+            },
             { new: true, runValidators: true }
         );
 
-        res.status(200).json({ message: 'Laporan berhasil diperbarui', laporan: updatedLaporan });
+        res.status(200).json({
+            message: 'Laporan berhasil diperbarui',
+            laporan: updatedLaporan
+        });
+
     } catch (error) {
-        res.status(500).json({ message: 'Terjadi kesalahan saat memperbarui laporan', error: error.message });
+        res.status(500).json({
+            message: 'Terjadi kesalahan saat memperbarui laporan',
+            error: error.message
+        });
     }
 };
 
