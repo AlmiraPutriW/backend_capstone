@@ -18,11 +18,16 @@ async function uploadToCloudinary(buffer, folder) {
     });
 }
 
-// Fungsi untuk mengambil `public_id` dari URL
 function extractPublicId(url) {
-    const parts = url.split('/');
-    const fileName = parts[parts.length - 1];
-    return fileName.split('.')[0]; // Mengambil nama file tanpa ekstensi
+    try {
+        const withoutParams = url.split('?')[0]; 
+        const parts = withoutParams.split('/upload/')[1]; 
+        const publicIdWithExt = parts.split('/').slice(1).join('/'); 
+        const publicId = publicIdWithExt.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+        return publicId;
+    } catch {
+        return null;
+    }
 }
 
 module.exports = { uploadToCloudinary, extractPublicId };
