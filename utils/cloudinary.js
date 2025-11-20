@@ -20,14 +20,20 @@ async function uploadToCloudinary(buffer, folder) {
 
 function extractPublicId(url) {
     try {
-        const withoutParams = url.split('?')[0]; 
-        const parts = withoutParams.split('/upload/')[1]; 
-        const publicIdWithExt = parts.split('/').slice(1).join('/'); 
-        const publicId = publicIdWithExt.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
-        return publicId;
-    } catch {
+        const parts = url.split('/');
+        const uploadIndex = parts.indexOf('upload');
+
+        if (uploadIndex === -1) return null;
+
+        // Ambil path setelah "/upload/"
+        const publicIdPath = parts.slice(uploadIndex + 1).join('/');
+
+        // Hilangkan ekstensi file (.jpg, .png, dll)
+        return publicIdPath.replace(/\.[^/.]+$/, ''); 
+    } catch (err) {
         return null;
     }
 }
+
 
 module.exports = { uploadToCloudinary, extractPublicId };
