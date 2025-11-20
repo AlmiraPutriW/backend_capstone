@@ -20,24 +20,18 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 });
 
-// Daftar origin yang diizinkan
-const allowedOrigins = [
-  'http://localhost:8081',
-  'https://sipraja-capstone.netlify.app'
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      // Izinkan request jika origin sesuai daftar
-      callback(null, true);
-    } else {
-      // Tolak request jika origin tidak ada di daftar
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true // Izinkan cookie lintas origin
+  origin: [
+    'http://localhost:8081',
+    'https://sipraja-capstone.netlify.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+
+app.options('*', cors()); // <-- WAJIB untuk preflight
+
 
 app.use(cookieParser());
 app.use(express.json()); // To accept JSON data
