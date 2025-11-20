@@ -10,7 +10,7 @@ const verifyToken = (req, res, next) => {
     try {
         const verifed = jwt.verify(token, process.env.JWT_SECRET_KEY);
         req.user = verifed;
-        req.userId = verifed.userId || verifed.id;
+        req.userId = verifed.id || verifed.userId;
         next();
     } catch (error) {
         res.status(401).json({ error: 'Waktu Login habis, silahkan login kembali' });
@@ -18,3 +18,4 @@ const verifyToken = (req, res, next) => {
 };
 
 module.exports = verifyToken;
+
