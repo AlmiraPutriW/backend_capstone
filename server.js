@@ -22,7 +22,7 @@ cloudinary.config({
 });
 
 // =============================
-// FINAL CORS FIX (VERCEL SAFE)
+// FINAL CORS FIX (WAJIB)
 // =============================
 const allowedOrigins = [
   'http://localhost:8081',
@@ -43,7 +43,7 @@ app.use((req, res, next) => {
   );
   res.header('Access-Control-Allow-Credentials', 'true');
 
-  // 🔥 KUNCI UTAMA (preflight)
+  // 🔥 KUNCI CORS (PRE-FLIGHT)
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 });
 
 // =============================
-// OTHER MIDDLEWARE
+// MIDDLEWARE
 // =============================
 app.use(cookieParser());
 app.use(express.json());
@@ -60,16 +60,16 @@ app.use(helmet());
 app.use(expressMongoSanitize());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// static images (jika ada)
+// static files (jika ada)
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // =============================
-// CONNECT DATABASE
+// DATABASE
 // =============================
 connectDB();
 
 // =============================
-// ROUTERS
+// ROUTES
 // =============================
 const userRouter = require('./routes/userRouter');
 const laporanRouter = require('./routes/laporanRouter');
@@ -82,9 +82,6 @@ app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/reset', forgetRouter);
 
 // =============================
-// START SERVER
+// EXPORT (WAJIB UNTUK VERCEL)
 // =============================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+module.exports = app;
