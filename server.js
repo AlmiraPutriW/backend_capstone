@@ -2,7 +2,6 @@ const express = require('express');
 const env = require('dotenv');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 const helmet = require('helmet');
@@ -17,30 +16,40 @@ const app = express();
 // CLOUDINARY CONFIG
 // =============================
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET_KEY
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET_KEY
 });
 
 // =============================
-// CORS FIX — SUPPORT MULTIPLE ORIGIN
+// FINAL CORS FIX (VERCEL SAFE)
 // =============================
 const allowedOrigins = [
   'http://localhost:8081',
   'https://sipraja-capstone.netlify.app'
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Jika request tidak ada origin (misalnya Postman) = izinkan
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // izinkan cookie/token lintas domain
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization'
+  );
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  // 🔥 KUNCI UTAMA (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // =============================
 // OTHER MIDDLEWARE
@@ -51,7 +60,7 @@ app.use(helmet());
 app.use(expressMongoSanitize());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// untuk akses gambar dari backend (jika ada)
+// static images (jika ada)
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // =============================
@@ -77,5 +86,5 @@ app.use('/api/v1/reset', forgetRouter);
 // =============================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
